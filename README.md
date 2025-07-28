@@ -1,6 +1,6 @@
 # CloudPlane
-buildtest
-A 1.21.7 Minecraft server fork of [Paper](https://github.com/PaperMC/Paper) and
+
+A 1.21.4 Minecraft server fork of [Paper](https://github.com/PaperMC/Paper) and
 [Pufferfish](https://github.com/pufferfish-gg/Pufferfish) with some more patches.
 This fork is mainly designed to fit the CloudCraft Minecraft network.
 
@@ -11,7 +11,6 @@ This fork is mainly designed to fit the CloudCraft Minecraft network.
 - Instantly refresh various things on player locale change
 - Add version info to brand in F3 screen
 - Add option for changing Pufferfish config location
-- Configurable villager gossip limitations
 - Various other fixes and minor performance increases
 
 ## Download

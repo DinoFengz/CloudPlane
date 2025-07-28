@@ -5,10 +5,10 @@ Subject: [PATCH] Changed branding
 
 
 diff --git a/src/main/java/com/destroystokyo/paper/Metrics.java b/src/main/java/com/destroystokyo/paper/Metrics.java
-index 6abc57669e87f7f98f3b76af3c0e50825fea6eb1..c58db15bb8304677a6a24b1c94155e393ddd42f3 100644
+index 8f62879582195d8ae4f64bd23f752fa133b1c973..adc4bad2156b0f2db668538cd9c79c0787d759af 100644
 --- a/src/main/java/com/destroystokyo/paper/Metrics.java
 +++ b/src/main/java/com/destroystokyo/paper/Metrics.java
-@@ -593,7 +593,7 @@ public class Metrics {
+@@ -592,7 +592,7 @@ public class Metrics {
              boolean logFailedRequests = config.getBoolean("logFailedRequests", false);
              // Only start Metrics, if it's enabled in the config
              if (config.getBoolean("enabled", true)) {
@@ -17,7 +17,7 @@ index 6abc57669e87f7f98f3b76af3c0e50825fea6eb1..c58db15bb8304677a6a24b1c94155e39
  
                  metrics.addCustomChart(new Metrics.SimplePie("minecraft_version", () -> {
                      String minecraftVersion = Bukkit.getVersion();
-@@ -607,11 +607,11 @@ public class Metrics {
+@@ -606,11 +606,11 @@ public class Metrics {
                  final String implVersion = org.bukkit.craftbukkit.Main.class.getPackage().getImplementationVersion();
                  if (implVersion != null) {
                      final String buildOrHash = implVersion.substring(implVersion.lastIndexOf('-') + 1);
@@ -32,7 +32,7 @@ index 6abc57669e87f7f98f3b76af3c0e50825fea6eb1..c58db15bb8304677a6a24b1c94155e39
                  metrics.addCustomChart(new Metrics.DrilldownPie("java_version", () -> {
                      Map<String, Map<String, Integer>> map = new HashMap<>();
 diff --git a/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java b/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
-index d0554ed6631535815e5932930911e3fe1dee8710..5d0c2d2dcbf959f12d143e1786364b24fa4343c0 100644
+index 532306cacd52579cdf37e4aca25887b1ed3ba6a1..8f1b57680731152102e69cc2d7c323b58ca08d26 100644
 --- a/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
 +++ b/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
 @@ -35,7 +35,7 @@ public class PaperVersionFetcher implements VersionFetcher {
@@ -40,7 +40,7 @@ index d0554ed6631535815e5932930911e3fe1dee8710..5d0c2d2dcbf959f12d143e1786364b24
      private static final int DISTANCE_ERROR = -1;
      private static final int DISTANCE_UNKNOWN = -2;
 -    private static final String DOWNLOAD_PAGE = "https://papermc.io/downloads/paper";
-+    private static final String DOWNLOAD_PAGE = "https://dl.cloudcraftmc.de/cloudplane"; // CloudPlane - branding
++    private static final String DOWNLOAD_PAGE = "https://dl.cloudcraftmc.de/CloudPlane"; // CloudPlane - branding
  
      @Override
      public long getCacheTime() {
@@ -67,7 +67,7 @@ index 6ee39b534b8d992655bc0cef3c299d12cbae0034..291d45623d7e55f12dddb17e2c665562
                  .completer(new ConsoleCommandCompleter(this.server))
                  .option(LineReader.Option.COMPLETE_IN_WORD, true);
 diff --git a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
-index 74ffdc823e66fc5ec027c4b7c462382bcbfe2be2..347f20a5107eb3644b4e42adfccbd7cc181ea512 100644
+index 790bad0494454ca12ee152e3de6da3da634d9b20..a718b5f701c0795e9e39e026637258e466d8831f 100644
 --- a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
 +++ b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
 @@ -31,6 +31,7 @@ public record ServerBuildInfoImpl(
@@ -87,8 +87,8 @@ index 74ffdc823e66fc5ec027c4b7c462382bcbfe2be2..347f20a5107eb3644b4e42adfccbd7cc
              getManifestAttribute(manifest, ATTRIBUTE_BRAND_NAME)
 -                .orElse(BRAND_PAPER_NAME),
 +                .orElse(BRAND_CLOUDPLANE_NAME), // CloudPlane - branding
-             SharedConstants.getCurrentVersion().id(),
-             SharedConstants.getCurrentVersion().name(),
+             SharedConstants.getCurrentVersion().getId(),
+             SharedConstants.getCurrentVersion().getName(),
              getManifestAttribute(manifest, ATTRIBUTE_BUILD_NUMBER)
 @@ -61,6 +62,7 @@ public record ServerBuildInfoImpl(
  
@@ -99,18 +99,18 @@ index 74ffdc823e66fc5ec027c4b7c462382bcbfe2be2..347f20a5107eb3644b4e42adfccbd7cc
      }
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/Main.java b/src/main/java/org/bukkit/craftbukkit/Main.java
-index 7675acdca2162e403f4ff523bcdd6efe0cb42d49..4b97c4b1e378e1ccef1fa0dfb77fb1ac1ddec68c 100644
+index bf5343b0847e9f57ffbc7f33714ae6ca62f14332..242c3bb588d3be12e84e5aaccd047c7dfc8f787e 100644
 --- a/src/main/java/org/bukkit/craftbukkit/Main.java
 +++ b/src/main/java/org/bukkit/craftbukkit/Main.java
-@@ -231,7 +231,7 @@ public class Main {
+@@ -267,7 +267,7 @@ public class Main {
                      if (buildDate.before(deadline.getTime())) {
                          // Paper start - This is some stupid bullshit
                          System.err.println("*** Warning, you've not updated in a while! ***");
--                        System.err.println("*** Please download a new build from https://papermc.io/downloads/paper ***");
-+                        System.err.println("*** Please download a new build from https://dl.cloudcraftmc.de/cloudplane ***"); // CloudPlane - branding
+-                        System.err.println("*** Please download a new build from https://papermc.io/downloads/paper ***"); // Paper
++                        System.err.println("*** Please download a new build from https://dl.cloudcraftmc.de/CloudPlane ***"); // Paper // CloudPlane - branding
+                         //System.err.println("*** Server will start in 20 seconds ***");
+                         //Thread.sleep(TimeUnit.SECONDS.toMillis(20));
                          // Paper end
-                     }
-                 }
 diff --git a/src/main/java/org/bukkit/craftbukkit/util/Versioning.java b/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
 index 774556a62eb240da42e84db4502e2ed43495be17..a2d3961b0027327327c248a2c11f5e285030964c 100644
 --- a/src/main/java/org/bukkit/craftbukkit/util/Versioning.java

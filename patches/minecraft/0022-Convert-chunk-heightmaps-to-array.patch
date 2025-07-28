@@ -5,97 +5,47 @@ Subject: [PATCH] Convert chunk heightmaps to array
 
 
 diff --git a/net/minecraft/network/protocol/game/ClientboundLevelChunkPacketData.java b/net/minecraft/network/protocol/game/ClientboundLevelChunkPacketData.java
-index 9f6d7c5dc0e591488a8a3763d8a1f1b3671d5299..74a3912a362c8fa56474c56cce4f915b1f7b9ec4 100644
+index 9e321ef1c3d5803519b243685f4ee598dc0cf640..ac6c7b09229851820b465ca382a9d33ec202e708 100644
 --- a/net/minecraft/network/protocol/game/ClientboundLevelChunkPacketData.java
 +++ b/net/minecraft/network/protocol/game/ClientboundLevelChunkPacketData.java
-@@ -25,11 +25,16 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
+@@ -23,6 +23,13 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
  import net.minecraft.world.level.levelgen.Heightmap;
  
  public class ClientboundLevelChunkPacketData {
++
 +    // CloudPlane start - convert heightmaps to array
 +    public static final Heightmap.Types[] SENDABLE_HEIGHTMAP_TYPES = java.util.Arrays.stream(Heightmap.Types.values())
 +            .filter(Heightmap.Types::sendToClient).toArray(Heightmap.Types[]::new);
 +    public static final int SENDABLE_HEIGHTMAP_TYPES_LEN = SENDABLE_HEIGHTMAP_TYPES.length;
 +    // CloudPlane end - convert heightmaps to array
-     private static final StreamCodec<ByteBuf, Map<Heightmap.Types, long[]>> HEIGHTMAPS_STREAM_CODEC = ByteBufCodecs.map(
-         i -> new EnumMap<>(Heightmap.Types.class), Heightmap.Types.STREAM_CODEC, ByteBufCodecs.LONG_ARRAY
-     );
++
      private static final int TWO_MEGABYTES = 2097152;
--    private final Map<Heightmap.Types, long[]> heightmaps;
-+    private final byte[] heightmaps; // CloudPlane end - convert heightmaps to array
+     private final CompoundTag heightmaps;
      private final byte[] buffer;
-     private final List<ClientboundLevelChunkPacketData.BlockEntityInfo> blockEntitiesData;
-     // Paper start - Handle oversized block entities in chunks
-@@ -48,10 +53,33 @@ public class ClientboundLevelChunkPacketData {
-     }
-     public ClientboundLevelChunkPacketData(LevelChunk levelChunk, io.papermc.paper.antixray.ChunkPacketInfo<net.minecraft.world.level.block.state.BlockState> chunkPacketInfo) {
+@@ -45,11 +52,15 @@ public class ClientboundLevelChunkPacketData {
          // Paper end
--        this.heightmaps = levelChunk.getHeightmaps()
--            .stream()
--            .filter(entry1 -> entry1.getKey().sendToClient())
--            .collect(Collectors.toMap(Entry::getKey, entry1 -> (long[])entry1.getValue().getRawData().clone()));
+         this.heightmaps = new CompoundTag();
+ 
+-        for (Entry<Heightmap.Types, Heightmap> entry : levelChunk.getHeightmaps()) {
+-            if (entry.getKey().sendToClient()) {
+-                this.heightmaps.put(entry.getKey().getSerializationKey(), new LongArrayTag(entry.getValue().getRawData()));
 +        // CloudPlane start - convert heightmaps to array
-+        int heightmapCount = 0;
-+        int heightmapSize = 0;
 +        for (int i = 0; i < SENDABLE_HEIGHTMAP_TYPES_LEN; ++i) {
 +            final Heightmap.Types type = SENDABLE_HEIGHTMAP_TYPES[i];
 +            final Heightmap heightmap = levelChunk.heightmaps[type.ordinal()];
 +            if (heightmap != null) {
-+                heightmapCount++;
-+                heightmapSize += net.minecraft.network.VarInt.getByteSize(type.ordinal())
-+                        + net.minecraft.network.VarInt.getByteSize(heightmap.getRawData().length)
-+                        + heightmap.getRawData().length * Long.BYTES;
-+            }
-+        }
-+        heightmapSize += net.minecraft.network.VarInt.getByteSize(heightmapCount);
-+        this.heightmaps = new byte[heightmapSize];
-+        ByteBuf heightmapBuf = Unpooled.wrappedBuffer(this.heightmaps);
-+        heightmapBuf.writerIndex(0);
-+        net.minecraft.network.VarInt.write(heightmapBuf, heightmapCount);
-+        for (int i = 0; i < SENDABLE_HEIGHTMAP_TYPES_LEN; ++i) {
-+            final Heightmap.Types type = SENDABLE_HEIGHTMAP_TYPES[i];
-+            final Heightmap heightmap = levelChunk.heightmaps[type.ordinal()];
-+            if (heightmap != null) {
-+                net.minecraft.network.VarInt.write(heightmapBuf, type.ordinal());
-+                FriendlyByteBuf.writeLongArray(heightmapBuf, heightmap.getRawData());
-+            }
-+        }
++                this.heightmaps.put(type.getSerializationKey(), new LongArrayTag(heightmap.getRawData()));
+             }
+         }
 +        // CloudPlane end - convert heightmaps to array
+ 
          this.buffer = new byte[calculateChunkSize(levelChunk)];
          // Paper start - Anti-Xray - Add chunk packet info
-         if (chunkPacketInfo != null) {
-@@ -76,7 +104,7 @@ public class ClientboundLevelChunkPacketData {
-     }
- 
-     public ClientboundLevelChunkPacketData(RegistryFriendlyByteBuf buffer, int x, int z) {
--        this.heightmaps = HEIGHTMAPS_STREAM_CODEC.decode(buffer);
-+        if (true) throw new UnsupportedOperationException(); // CloudPlane end - convert heightmaps to array
-         int varInt = buffer.readVarInt();
-         if (varInt > 2097152) { // Paper - diff on change - if this changes, update PacketEncoder
-             throw new RuntimeException("Chunk Packet trying to allocate too much memory on read.");
-@@ -88,7 +116,7 @@ public class ClientboundLevelChunkPacketData {
-     }
- 
-     public void write(RegistryFriendlyByteBuf buffer) {
--        HEIGHTMAPS_STREAM_CODEC.encode(buffer, this.heightmaps);
-+        buffer.writeBytes(this.heightmaps);// CloudPlane end - convert heightmaps to array
-         buffer.writeVarInt(this.buffer.length);
-         buffer.writeBytes(this.buffer);
-         ClientboundLevelChunkPacketData.BlockEntityInfo.LIST_STREAM_CODEC.encode(buffer, this.blockEntitiesData);
-@@ -150,7 +178,7 @@ public class ClientboundLevelChunkPacketData {
-     }
- 
-     public Map<Heightmap.Types, long[]> getHeightmaps() {
--        return this.heightmaps;
-+        throw new UnsupportedOperationException(); // CloudPlane end - convert heightmaps to array
-     }
- 
-     static class BlockEntityInfo {
 diff --git a/net/minecraft/world/level/chunk/ChunkAccess.java b/net/minecraft/world/level/chunk/ChunkAccess.java
-index 182c14b660f8860bed627eed4e01fd4002153e9a..7988c050efa32ded9604096b5af6a98a545670cb 100644
+index 6d565b52552534ce9cacfc35ad1bf4adcb69eac3..a27d62d31ecb460b99af7e2ca989d11ce56f929f 100644
 --- a/net/minecraft/world/level/chunk/ChunkAccess.java
 +++ b/net/minecraft/world/level/chunk/ChunkAccess.java
-@@ -75,7 +75,7 @@ public abstract class ChunkAccess implements BiomeManager.NoiseBiomeSource, Ligh
+@@ -74,7 +74,7 @@ public abstract class ChunkAccess implements BiomeManager.NoiseBiomeSource, Ligh
      protected final UpgradeData upgradeData;
      @Nullable
      protected BlendingData blendingData;
@@ -104,7 +54,7 @@ index 182c14b660f8860bed627eed4e01fd4002153e9a..7988c050efa32ded9604096b5af6a98a
      // Paper - rewrite chunk system
      private final Map<Structure, StructureStart> structureStarts = Maps.newHashMap();
      private final Map<Structure, LongSet> structuresRefences = Maps.newHashMap();
-@@ -241,31 +241,42 @@ public abstract class ChunkAccess implements BiomeManager.NoiseBiomeSource, Ligh
+@@ -234,31 +234,42 @@ public abstract class ChunkAccess implements BiomeManager.NoiseBiomeSource, Ligh
          return this.getSections()[index];
      }
  
@@ -153,10 +103,10 @@ index 182c14b660f8860bed627eed4e01fd4002153e9a..7988c050efa32ded9604096b5af6a98a
  
          return heightmap.getFirstAvailable(x & 15, z & 15) - 1;
 diff --git a/net/minecraft/world/level/chunk/LevelChunk.java b/net/minecraft/world/level/chunk/LevelChunk.java
-index b5d9460011afa105c16dee8fb2a01c900ef4b523..6331bf9d6fe8c256cfb4883ae2241cde569a9230 100644
+index 9d28067610099bfcabdb6014616a8c75d15ed53d..9479ca0ca57c31385f75d6ddaa513c53bf3d42dc 100644
 --- a/net/minecraft/world/level/chunk/LevelChunk.java
 +++ b/net/minecraft/world/level/chunk/LevelChunk.java
-@@ -162,11 +162,11 @@ public class LevelChunk extends ChunkAccess implements ca.spottedleaf.moonrise.p
+@@ -159,11 +159,11 @@ public class LevelChunk extends ChunkAccess implements ca.spottedleaf.moonrise.p
          this.level = (ServerLevel) level; // CraftBukkit - type
          this.gameEventListenerRegistrySections = new Int2ObjectOpenHashMap<>();
  
@@ -172,7 +122,7 @@ index b5d9460011afa105c16dee8fb2a01c900ef4b523..6331bf9d6fe8c256cfb4883ae2241cde
  
          this.postLoad = postLoad;
          this.blockTicks = blockTicks;
-@@ -212,11 +212,14 @@ public class LevelChunk extends ChunkAccess implements ca.spottedleaf.moonrise.p
+@@ -209,11 +209,14 @@ public class LevelChunk extends ChunkAccess implements ca.spottedleaf.moonrise.p
          this.setAllStarts(chunk.getAllStarts());
          this.setAllReferences(chunk.getAllReferences());
  
@@ -190,7 +140,7 @@ index b5d9460011afa105c16dee8fb2a01c900ef4b523..6331bf9d6fe8c256cfb4883ae2241cde
  
          // Paper - rewrite chunk system
          this.setLightCorrect(chunk.isLightCorrect());
-@@ -389,10 +392,10 @@ public class LevelChunk extends ChunkAccess implements ca.spottedleaf.moonrise.p
+@@ -390,10 +393,10 @@ public class LevelChunk extends ChunkAccess implements ca.spottedleaf.moonrise.p
                  return null;
              } else {
                  Block block = state.getBlock();
@@ -206,10 +156,10 @@ index b5d9460011afa105c16dee8fb2a01c900ef4b523..6331bf9d6fe8c256cfb4883ae2241cde
                  if (hasOnlyAir != hasOnlyAir1) {
                      this.level.getChunkSource().getLightEngine().updateSectionStatus(pos, hasOnlyAir1);
 diff --git a/net/minecraft/world/level/chunk/ProtoChunk.java b/net/minecraft/world/level/chunk/ProtoChunk.java
-index aa085d8a78a3fb40a214e4b152ab04d9a409f76f..32839cfe9a666edb1012be5481354e2dea5e4d9e 100644
+index e66239e2da91bd3ddf358d239be796719c0da327..7a0d550650731a33494144c610874a13579566af 100644
 --- a/net/minecraft/world/level/chunk/ProtoChunk.java
 +++ b/net/minecraft/world/level/chunk/ProtoChunk.java
-@@ -166,7 +166,7 @@ public class ProtoChunk extends ChunkAccess {
+@@ -160,7 +160,7 @@ public class ProtoChunk extends ChunkAccess {
                  EnumSet<Heightmap.Types> set1 = null;
  
                  for (Heightmap.Types types : set) {
@@ -218,7 +168,7 @@ index aa085d8a78a3fb40a214e4b152ab04d9a409f76f..32839cfe9a666edb1012be5481354e2d
                      if (heightmap == null) {
                          if (set1 == null) {
                              set1 = EnumSet.noneOf(Heightmap.Types.class);
-@@ -181,7 +181,7 @@ public class ProtoChunk extends ChunkAccess {
+@@ -175,7 +175,7 @@ public class ProtoChunk extends ChunkAccess {
                  }
  
                  for (Heightmap.Types typesx : set) {
@@ -228,10 +178,10 @@ index aa085d8a78a3fb40a214e4b152ab04d9a409f76f..32839cfe9a666edb1012be5481354e2d
  
                  return blockState;
 diff --git a/net/minecraft/world/level/chunk/storage/SerializableChunkData.java b/net/minecraft/world/level/chunk/storage/SerializableChunkData.java
-index e04d3479383cd480cf35ed7ac3c82e7f6fb69e28..6c390bb62e2179513c683980453260ea76e6ad67 100644
+index 6b6aaeca14178b5b709e20ae13552d42217f15c0..0d2d168ca690735a16e23f7e5c40323d17777bd4 100644
 --- a/net/minecraft/world/level/chunk/storage/SerializableChunkData.java
 +++ b/net/minecraft/world/level/chunk/storage/SerializableChunkData.java
-@@ -536,12 +536,15 @@ public record SerializableChunkData(
+@@ -567,12 +567,15 @@ public record SerializableChunkData(
  
              Map<Heightmap.Types, long[]> map = new EnumMap<>(Heightmap.Types.class);
  

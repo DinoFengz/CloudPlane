@@ -2,7 +2,6 @@ package dev.booky.cloudplane;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.minecraft.world.entity.ai.gossip.GossipType;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -139,16 +138,5 @@ public class CloudPlaneConfig {
     public static boolean srPlaceInDefaultFluid = false;
     private static void surfaceRules() {
         srPlaceInDefaultFluid = getBoolean("settings.allow-surface-rules-for-default-fluids", srPlaceInDefaultFluid);
-    }
-
-    private static void villagerGossip() {
-        for (GossipType gossipType : GossipType.values()) {
-            gossipType.max = gossipType.defaultMax;
-            gossipType.decayPerDay = gossipType.defaultDecayPerDay;
-            gossipType.decayPerTransfer = gossipType.defaultDecayPerTransfer;
-            gossipType.max = getInt("settings.villager-gossip." + gossipType.id + ".limit", gossipType.max);
-            gossipType.decayPerDay = getInt("settings.villager-gossip." + gossipType.id + ".decay-per-day", gossipType.decayPerDay);
-            gossipType.decayPerTransfer = getInt("settings.villager-gossip." + gossipType.id + ".decay-per-transfer", gossipType.decayPerTransfer);
-        }
     }
 }

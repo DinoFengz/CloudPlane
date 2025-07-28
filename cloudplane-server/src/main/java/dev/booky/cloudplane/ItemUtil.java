@@ -6,8 +6,8 @@ import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectMap;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
-import net.minecraft.core.component.DataComponentExactPredicate;
 import net.minecraft.core.component.DataComponentPatch;
+import net.minecraft.core.component.DataComponentPredicate;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.component.TypedDataComponent;
@@ -45,9 +45,10 @@ public final class ItemUtil {
     @SuppressWarnings("unchecked") // not unchecked
     public static void unpackPatchSaves(ItemStack stack) {
         CustomData customData = stack.getOrDefault(CUSTOM_DATA, CustomData.EMPTY);
-        if (customData.isEmpty() || !(customData.getUnsafe().get(SAVEABLE_COMPONENT_TAG_NAME) instanceof CompoundTag savedTag)) {
+        if (customData.isEmpty() || !customData.contains(SAVEABLE_COMPONENT_TAG_NAME)) {
             return; // nothing to unpack
         }
+        CompoundTag savedTag = customData.getUnsafe().getCompound(SAVEABLE_COMPONENT_TAG_NAME);
         for (Pair<String, DataComponentType<?>> type : SAVEABLE_COMPONENT_TYPES) {
             Tag encoded = savedTag.get(type.getFirst());
             if (encoded == null) {
@@ -109,9 +110,10 @@ public final class ItemUtil {
             }
         }
         if (customData == null || customData.isEmpty()
-                || !(customData.getUnsafe().get(SAVEABLE_COMPONENT_TAG_NAME) instanceof CompoundTag savedTag)) {
+                || !customData.contains(SAVEABLE_COMPONENT_TAG_NAME)) {
             return cost; // nothing to unpack
         }
+        CompoundTag savedTag = customData.getUnsafe().getCompound(SAVEABLE_COMPONENT_TAG_NAME);
         components = new ArrayList<>(components);
         crying:
         for (Pair<String, DataComponentType<?>> type : SAVEABLE_COMPONENT_TYPES) {
@@ -189,7 +191,7 @@ public final class ItemUtil {
         }
 
         // components aren't made immutable here, but doesn't matter
-        DataComponentExactPredicate componentsPredicate = new DataComponentExactPredicate(components);
+        DataComponentPredicate componentsPredicate = new DataComponentPredicate(components);
         return new ItemCost(cost.item(), cost.count(), componentsPredicate, cost.itemStack());
     }
 
